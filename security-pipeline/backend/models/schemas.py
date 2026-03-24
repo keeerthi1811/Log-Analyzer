@@ -95,6 +95,7 @@ class FileUploadResponse(BaseModel):
     """Response after file upload and analysis."""
     filename: str
     file_size_bytes: int
+    original_content: Optional[str] = Field(None, description="Extracted text from the uploaded file")
     analysis: AnalyzeResponse
 
 

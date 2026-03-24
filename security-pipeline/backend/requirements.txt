@@ -10,3 +10,4 @@ httpx==0.25.2
 pytest==7.4.3
 pytest-asyncio==0.23.2
 aiofiles==23.2.1
+google-genai>=0.3.0

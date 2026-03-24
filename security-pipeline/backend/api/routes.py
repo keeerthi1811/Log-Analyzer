@@ -188,6 +188,7 @@ async def upload_file(
         return FileUploadResponse(
             filename=file.filename,
             file_size_bytes=file_size,
+            original_content=content,   # ✅ ADD THIS LINE
             analysis=analysis
         )
 

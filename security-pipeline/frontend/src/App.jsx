@@ -2,18 +2,18 @@
  * Main Application Component
  * Orchestrates the security pipeline UI.
  */
-import React, { useState, useEffect, useCallback } from 'react';
-import FileUpload from './components/FileUpload';
-import TextInput from './components/TextInput';
-import LogViewer from './components/LogViewer';
-import InsightsPanel from './components/InsightsPanel';
-import RiskSummary from './components/RiskSummary';
-import { analyzeContent, uploadFile, healthCheck } from './services/api';
+import React, { useState, useEffect, useCallback } from "react";
+import FileUpload from "./components/FileUpload";
+import TextInput from "./components/TextInput";
+import LogViewer from "./components/LogViewer";
+import InsightsPanel from "./components/InsightsPanel";
+import RiskSummary from "./components/RiskSummary";
+import { analyzeContent, uploadFile, healthCheck } from "./services/api";
 
 function App() {
-  const [activeTab, setActiveTab] = useState('file'); // 'file' | 'text' | 'sql' | 'chat'
+  const [activeTab, setActiveTab] = useState("file"); // 'file' | 'text' | 'sql' | 'chat'
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [originalContent, setOriginalContent] = useState('');
+  const [originalContent, setOriginalContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [backendStatus, setBackendStatus] = useState(null);
@@ -29,7 +29,7 @@ function App() {
   useEffect(() => {
     healthCheck()
       .then((data) => setBackendStatus(data))
-      .catch(() => setBackendStatus({ status: 'offline' }));
+      .catch(() => setBackendStatus({ status: "offline" }));
   }, []);
 
   const handleAnalyze = useCallback(
@@ -45,7 +45,7 @@ function App() {
         const msg =
           err.response?.data?.detail ||
           err.message ||
-          'Analysis failed. Check backend connection.';
+          "Analysis failed. Check backend connection.";
         setError(msg);
         setAnalysisResult(null);
       } finally {
@@ -62,17 +62,37 @@ function App() {
 
       try {
         const result = await uploadFile(file, options);
-        // For file uploads, the response wraps analysis inside `analysis`
+        console.log("Upload result:", result);
+        console.log("Upload result KEYS:", Object.keys(result)); // top-level keys
+        console.log(
+          "Analysis keys:",
+          result.analysis ? Object.keys(result.analysis) : "no analysis field"
+        ); // analysis keys
+        console.log("Full JSON:", JSON.stringify(result, null, 2)); // full structure
         setAnalysisResult(result.analysis);
-        // Read file for log viewer
-        const reader = new FileReader();
-        reader.onload = (e) => setOriginalContent(e.target.result);
-        reader.readAsText(file);
+
+        const ext = "." + file.name.split(".").pop().toLowerCase();
+        if ([".log", ".txt"].includes(ext)) {
+          const reader = new FileReader();
+          reader.onload = (e) => setOriginalContent(e.target.result);
+          reader.readAsText(file);
+        } else {
+          const content =
+            result.original_content || // ✅ This will now work
+            result.analysis?.masked_content ||
+            null;
+
+          if (content) {
+            setOriginalContent(content);
+          } else {
+            setOriginalContent(`[No content extracted from ${file.name}]`);
+          }
+        }
       } catch (err) {
         const msg =
           err.response?.data?.detail ||
           err.message ||
-          'File upload failed. Check backend connection.';
+          "File upload failed. Check backend connection.";
         setError(msg);
         setAnalysisResult(null);
       } finally {
@@ -84,15 +104,15 @@ function App() {
 
   const handleReset = () => {
     setAnalysisResult(null);
-    setOriginalContent('');
+    setOriginalContent("");
     setError(null);
   };
 
   const tabs = [
-    { id: 'file', label: '📁 File Upload', icon: '📁' },
-    { id: 'text', label: '📝 Text Input', icon: '📝' },
-    { id: 'sql', label: '🗄️ SQL Query', icon: '🗄️' },
-    { id: 'chat', label: '💬 Live Chat', icon: '💬' },
+    { id: "file", label: "📁 File Upload", icon: "📁" },
+    { id: "text", label: "📝 Text Input", icon: "📝" },
+    { id: "sql", label: "🗄️ SQL Query", icon: "🗄️" },
+    { id: "chat", label: "💬 Live Chat", icon: "💬" },
   ];
 
   return (
@@ -102,18 +122,24 @@ function App() {
         <div className="header-content">
           <div className="header-left">
             <h1>🔒 Security Pipeline</h1>
-            <span className="header-subtitle">AI-Powered Security Analysis Engine</span>
+            <span className="header-subtitle">
+              AI-Powered Security Analysis Engine
+            </span>
           </div>
           <div className="header-right">
             <span
               className={`status-badge ${
-                backendStatus?.status === 'healthy' ? 'status-online' : 'status-offline'
+                backendStatus?.status === "healthy"
+                  ? "status-online"
+                  : "status-offline"
               }`}
             >
-              {backendStatus?.status === 'healthy' ? '● Online' : '● Offline'}
+              {backendStatus?.status === "healthy" ? "● Online" : "● Offline"}
             </span>
             {backendStatus?.modules?.ai_engine && (
-              <span className="ai-badge">AI: {backendStatus.modules.ai_engine}</span>
+              <span className="ai-badge">
+                AI: {backendStatus.modules.ai_engine}
+              </span>
             )}
           </div>
         </div>
@@ -126,7 +152,9 @@ function App() {
             <input
               type="checkbox"
               checked={options.mask}
-              onChange={(e) => setOptions({ ...options, mask: e.target.checked })}
+              onChange={(e) =>
+                setOptions({ ...options, mask: e.target.checked })
+              }
             />
             <span>🎭 Mask Sensitive Data</span>
           </label>
@@ -134,7 +162,9 @@ function App() {
             <input
               type="checkbox"
               checked={options.blockHighRisk}
-              onChange={(e) => setOptions({ ...options, blockHighRisk: e.target.checked })}
+              onChange={(e) =>
+                setOptions({ ...options, blockHighRisk: e.target.checked })
+              }
             />
             <span>🚫 Block High Risk</span>
           </label>
@@ -142,7 +172,9 @@ function App() {
             <input
               type="checkbox"
               checked={options.logAnalysis}
-              onChange={(e) => setOptions({ ...options, logAnalysis: e.target.checked })}
+              onChange={(e) =>
+                setOptions({ ...options, logAnalysis: e.target.checked })
+              }
             />
             <span>📊 Log Analysis</span>
           </label>
@@ -150,7 +182,9 @@ function App() {
             <input
               type="checkbox"
               checked={options.aiInsights}
-              onChange={(e) => setOptions({ ...options, aiInsights: e.target.checked })}
+              onChange={(e) =>
+                setOptions({ ...options, aiInsights: e.target.checked })
+              }
             />
             <span>🤖 AI Insights</span>
           </label>
@@ -168,7 +202,9 @@ function App() {
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  className={`tab-btn ${activeTab === tab.id ? 'tab-active' : ''}`}
+                  className={`tab-btn ${
+                    activeTab === tab.id ? "tab-active" : ""
+                  }`}
                   onClick={() => setActiveTab(tab.id)}
                 >
                   {tab.label}
@@ -177,10 +213,10 @@ function App() {
             </div>
 
             <div className="tab-content">
-              {activeTab === 'file' && (
+              {activeTab === "file" && (
                 <FileUpload onUpload={handleFileUpload} loading={loading} />
               )}
-              {activeTab === 'text' && (
+              {activeTab === "text" && (
                 <TextInput
                   inputType="text"
                   placeholder="Paste text content to analyze for security issues..."
@@ -188,7 +224,7 @@ function App() {
                   loading={loading}
                 />
               )}
-              {activeTab === 'sql' && (
+              {activeTab === "sql" && (
                 <TextInput
                   inputType="sql"
                   placeholder="Paste SQL queries to check for injection patterns, exposed credentials..."
@@ -196,7 +232,7 @@ function App() {
                   loading={loading}
                 />
               )}
-              {activeTab === 'chat' && (
+              {activeTab === "chat" && (
                 <TextInput
                   inputType="chat"
                   placeholder="Paste chat/conversation logs to scan for sensitive data leaks..."
@@ -234,14 +270,19 @@ function App() {
             <div className="results-columns">
               <div className="results-left">
                 <LogViewer
-                  content={options.mask && analysisResult.masked_content
-                    ? analysisResult.masked_content
-                    : originalContent}
+                  content={
+                    options.mask && analysisResult.masked_content
+                      ? analysisResult.masked_content
+                      : originalContent
+                  }
                   findings={analysisResult.findings}
                 />
               </div>
               <div className="results-right">
-                <InsightsPanel insights={analysisResult.ai_insights} findings={analysisResult.findings} />
+                <InsightsPanel
+                  insights={analysisResult.ai_insights}
+                  findings={analysisResult.findings}
+                />
               </div>
             </div>
           </div>
@@ -251,8 +292,8 @@ function App() {
       {/* Footer */}
       <footer className="app-footer">
         <p>
-          Security Pipeline v1.0 • Processing time:{' '}
-          {analysisResult ? `${analysisResult.processing_time_ms}ms` : '—'}
+          Security Pipeline v1.0 • Processing time:{" "}
+          {analysisResult ? `${analysisResult.processing_time_ms}ms` : "—"}
         </p>
       </footer>
     </div>

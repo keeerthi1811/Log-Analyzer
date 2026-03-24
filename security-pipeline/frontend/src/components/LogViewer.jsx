@@ -2,23 +2,33 @@
  * Log Viewer Component — Code-editor-style display
  * Renders logs with line numbers, risk highlighting, and finding markers.
  */
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from "react";
 
 const RISK_COLORS = {
-  critical: { bg: '#fef2f2', border: '#ef4444', text: '#991b1b', badge: '#dc2626' },
-  high: { bg: '#fff7ed', border: '#f97316', text: '#9a3412', badge: '#ea580c' },
-  medium: { bg: '#fffbeb', border: '#f59e0b', text: '#92400e', badge: '#d97706' },
-  low: { bg: '#f0fdf4', border: '#22c55e', text: '#166534', badge: '#16a34a' },
-  info: { bg: '#f0f9ff', border: '#3b82f6', text: '#1e40af', badge: '#2563eb' },
+  critical: {
+    bg: "#fef2f2",
+    border: "#ef4444",
+    text: "#991b1b",
+    badge: "#dc2626",
+  },
+  high: { bg: "#fff7ed", border: "#f97316", text: "#9a3412", badge: "#ea580c" },
+  medium: {
+    bg: "#fffbeb",
+    border: "#f59e0b",
+    text: "#92400e",
+    badge: "#d97706",
+  },
+  low: { bg: "#f0fdf4", border: "#22c55e", text: "#166534", badge: "#16a34a" },
+  info: { bg: "#f0f9ff", border: "#3b82f6", text: "#1e40af", badge: "#2563eb" },
 };
 
 const LogViewer = ({ content, findings }) => {
   const [selectedLine, setSelectedLine] = useState(null);
-  const [filter, setFilter] = useState('all'); // 'all' | 'critical' | 'high' | 'medium' | 'low'
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState("all"); // 'all' | 'critical' | 'high' | 'medium' | 'low'
+  const [searchTerm, setSearchTerm] = useState("");
   const containerRef = useRef(null);
 
-  const lines = useMemo(() => (content || '').split('\n'), [content]);
+  const lines = useMemo(() => (content || "").split("\n"), [content]);
 
   // Create a findings map by line number for O(1) lookup
   const findingsMap = useMemo(() => {
@@ -32,7 +42,7 @@ const LogViewer = ({ content, findings }) => {
 
   // Filter findings
   const visibleFindings = useMemo(() => {
-    if (filter === 'all') return findings || [];
+    if (filter === "all") return findings || [];
     return (findings || []).filter((f) => f.risk === filter);
   }, [findings, filter]);
 
@@ -43,7 +53,7 @@ const LogViewer = ({ content, findings }) => {
     setSelectedLine(lineNum);
     const el = document.getElementById(`log-line-${lineNum}`);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
@@ -57,11 +67,11 @@ const LogViewer = ({ content, findings }) => {
   }, [findings]);
 
   const getHighestRisk = (lineFindings) => {
-    const order = ['critical', 'high', 'medium', 'low', 'info'];
+    const order = ["critical", "high", "medium", "low", "info"];
     for (const risk of order) {
       if (lineFindings.some((f) => f.risk === risk)) return risk;
     }
-    return 'info';
+    return "info";
   };
 
   return (
@@ -81,8 +91,10 @@ const LogViewer = ({ content, findings }) => {
           {/* Filter buttons */}
           <div className="filter-buttons">
             <button
-              className={`filter-btn ${filter === 'all' ? 'filter-active' : ''}`}
-              onClick={() => setFilter('all')}
+              className={`filter-btn ${
+                filter === "all" ? "filter-active" : ""
+              }`}
+              onClick={() => setFilter("all")}
             >
               All ({findings?.length || 0})
             </button>
@@ -91,7 +103,9 @@ const LogViewer = ({ content, findings }) => {
                 count > 0 && (
                   <button
                     key={risk}
-                    className={`filter-btn filter-${risk} ${filter === risk ? 'filter-active' : ''}`}
+                    className={`filter-btn filter-${risk} ${
+                      filter === risk ? "filter-active" : ""
+                    }`}
                     onClick={() => setFilter(risk)}
                   >
                     {risk} ({count})
@@ -125,9 +139,8 @@ const LogViewer = ({ content, findings }) => {
           const lineFindings = findingsMap[lineNum] || [];
           const hasFindings = lineFindings.length > 0;
           const isVisible =
-            filter === 'all' || visibleFindingLines.has(lineNum);
+            filter === "all" || visibleFindingLines.has(lineNum);
           const highestRisk = hasFindings ? getHighestRisk(lineFindings) : null;
-          const colors = highestRisk ? RISK_COLORS[highestRisk] : null;
           const isSelected = selectedLine === lineNum;
 
           // Search highlight
@@ -135,7 +148,7 @@ const LogViewer = ({ content, findings }) => {
             searchTerm && line.toLowerCase().includes(searchTerm.toLowerCase());
 
           // Skip non-matching lines when filtering (but show surrounding context)
-          if (filter !== 'all' && !isVisible && !hasFindings) {
+          if (filter !== "all" && !isVisible && !hasFindings) {
             return null;
           }
 
@@ -143,17 +156,11 @@ const LogViewer = ({ content, findings }) => {
             <div
               key={lineNum}
               id={`log-line-${lineNum}`}
-              className={`log-line ${hasFindings ? 'log-line-finding' : ''} ${
-                isSelected ? 'log-line-selected' : ''
-              } ${matchesSearch ? 'log-line-search-match' : ''}`}
-              style={
-                hasFindings
-                  ? {
-                      backgroundColor: colors.bg,
-                      borderLeft: `4px solid ${colors.border}`,
-                    }
-                  : {}
-              }
+              className={`log-line ${
+                hasFindings ? `log-line-finding log-line-${highestRisk}` : ""
+              } ${isSelected ? "log-line-selected" : ""} ${
+                matchesSearch ? "log-line-search-match" : ""
+              }`}
               onClick={() => hasFindings && setSelectedLine(lineNum)}
             >
               {/* Line Number */}
@@ -161,17 +168,14 @@ const LogViewer = ({ content, findings }) => {
 
               {/* Risk Indicator */}
               {hasFindings && (
-                <span
-                  className="risk-indicator"
-                  style={{ backgroundColor: colors.badge }}
-                >
-                  {highestRisk === 'critical'
-                    ? '🔴'
-                    : highestRisk === 'high'
-                    ? '🟠'
-                    : highestRisk === 'medium'
-                    ? '🟡'
-                    : '🟢'}
+                <span className="risk-indicator">
+                  {highestRisk === "critical"
+                    ? "🔴"
+                    : highestRisk === "high"
+                    ? "🟠"
+                    : highestRisk === "medium"
+                    ? "🟡"
+                    : "🟢"}
                 </span>
               )}
 
@@ -189,7 +193,7 @@ const LogViewer = ({ content, findings }) => {
                       className="risk-badge"
                       style={{
                         backgroundColor: RISK_COLORS[f.risk]?.badge,
-                        color: '#fff',
+                        color: "#fff",
                       }}
                     >
                       {f.risk.toUpperCase()}: {f.type}
@@ -218,7 +222,7 @@ const LogViewer = ({ content, findings }) => {
                   className="risk-badge-lg"
                   style={{
                     backgroundColor: RISK_COLORS[f.risk]?.badge,
-                    color: '#fff',
+                    color: "#fff",
                   }}
                 >
                   {f.risk.toUpperCase()}
@@ -227,7 +231,7 @@ const LogViewer = ({ content, findings }) => {
               </div>
               <div className="finding-detail-body">
                 <div>
-                  <strong>Value:</strong>{' '}
+                  <strong>Value:</strong>{" "}
                   <code className="finding-value">{f.value}</code>
                 </div>
                 {f.recommendation && (
@@ -246,7 +250,7 @@ const LogViewer = ({ content, findings }) => {
         <span>
           {lines.length} lines • {findings?.length || 0} findings
         </span>
-        {filter !== 'all' && (
+        {filter !== "all" && (
           <span>
             Filtering: {filter} ({visibleFindings.length} shown)
           </span>
@@ -259,7 +263,7 @@ const LogViewer = ({ content, findings }) => {
 // Helper: highlight search matches in text
 function highlightSearch(text, term) {
   if (!term) return text;
-  const parts = text.split(new RegExp(`(${escapeRegExp(term)})`, 'gi'));
+  const parts = text.split(new RegExp(`(${escapeRegExp(term)})`, "gi"));
   return parts.map((part, i) =>
     part.toLowerCase() === term.toLowerCase() ? (
       <mark key={i} className="search-highlight">
@@ -272,7 +276,7 @@ function highlightSearch(text, term) {
 }
 
 function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export default LogViewer;
