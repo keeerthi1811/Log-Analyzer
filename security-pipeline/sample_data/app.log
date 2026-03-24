@@ -1,0 +1,12 @@
+2024-01-15 10:23:45 INFO Application started successfully
+2024-01-15 10:23:46 INFO Loading configuration from /etc/app/config.yml
+2024-01-15 10:24:12 DEBUG Connecting to database at db-host:5432
+2024-01-15 10:24:15 INFO Database connection established
+2024-01-15 10:25:01 INFO User login attempt: admin@company.com
+2024-01-15 10:25:03 ERROR Authentication config: password = admin123
+2024-01-15 10:26:15 WARN API call using key: sk-prod-xyz-abc123defg456hijklmno
+2024-01-15 10:27:30 ERROR java.lang.NullPointerException
+    at com.app.service.UserService.java:142
+    at com.app.controller.AuthController.java:89
+2024-01-15 10:28:00 INFO Processing batch job #4521 complete
+2024-01-15 10:28:30 INFO Application shutdown gracefully
